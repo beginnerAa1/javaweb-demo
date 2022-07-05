@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+ <div id="app">
+
+
+     <el-table-column
+             align="center"
+             label="操作">
+
+
+
+             <el-row>
+                 <el-button type="primary">按钮1</el-button>
+                 <el-button type="danger">按钮2</el-button>
+             </el-row>
+
+
+
+     </el-table-column>
+
+
+
+
+
+ </div>
+<script src="https://cdn.staticfile.org/vue/2.2.2/vue.min.js"></script>
+<!--引入 element-ui 的样式，-->
+<link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+<!-- 必须先引入vue，  后使用element-ui -->
+<script src="https://cdn.jsdelivr.net/npm/vue@2.5.17/dist/vue.js"></script>
+<!-- 引入element 的组件库-->
+<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script>
+    new Vue({
+        el: "#app",
+        mounted(){
+            //当页面加载完成后发送异步请求获取数据
+            this.selectAll();
+
+        },
+        methods: {
+            tableRowClassName({row, rowIndex}) {
+                if (rowIndex === 1) {
+                    return 'warning-row';
+                } else if (rowIndex === 3) {
+                    return 'success-row';
+                }
+                return '';
+            },
+            handleSelectionChange(val) {
+                this.multipleSelection = val;
+            },
+            selectAll(){
+                axios({
+                    method:"get",
+                    url:"http://localhost:8080/selectAllServlet"
+                }).then(resp=>{
+                    this.tableData = resp.data;
+                })
+            },
+            //查询方法
+            onSubmit() {
+            },
+            //添加数据
+            addBrand() {
+                //发送AJAX异步请求添加数据
+                var _this = this;
+                axios({
+                    method:"post",
+                    url:"http://localhost:8080/addServlet",
+                    data: _this.brand
+                }).then(function (resp) {
+                    if(resp.data == "success"){
+                        //添加成功 关闭窗口
+                        _this.dialogVisible = false;
+                        _this.selectAll();
+                        _this.$message({
+                            message: '恭喜你，添加成功',
+                            type: 'success'
+                        });
+                    }
+                })
+            },
+            handleSizeChange(val) {
+                console.log(`每页 ${val} 条`);
+            },
+            handleCurrentChange(val) {
+                console.log(`当前页: ${val}`);
+            }
+        },
+        data() {
+            return {
+                currentPage: 4,
+                dialogVisible: false,
+                brand:{
+                    status: '',
+                    brandName: '',
+                    companyName: '',
+                    id:'',
+                    description:'',
+                    ordered:''
+                },
+                multipleSelection:[],
+                tableData:[]
+            }
+        }
+    })
+</script>
+</body>
+</html>
+</body>
+</html>

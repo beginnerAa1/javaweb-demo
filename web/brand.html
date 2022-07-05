@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>brand</title>
+    <style>
+        .el-table .warning-row {
+            background: oldlace;
+        }
+        .el-table .success-row {
+            background: #f0f9eb;
+        }
+    </style>
+</head>
+<body>
+<div id="app">
+    <!--表单搜索-->
+    <el-form :inline="true" :model="brand" class="demo-form-inline">
+        <el-form-item label="当前状态">
+            <el-select v-model="brand.status" placeholder="当前状态">
+                <el-option label="启用" value="1"></el-option>
+                <el-option label="禁用" value="0"></el-option>
+            </el-select>
+        </el-form-item>
+        <el-form-item label="企业名称">
+            <el-input v-model="brand.companyName" placeholder="企业名称"></el-input>
+        </el-form-item>
+        <el-form-item label="品牌名称">
+            <el-input v-model="brand.brandName" placeholder="品牌名称"></el-input>
+        </el-form-item>
+        <el-form-item>
+            <el-button type="primary" @click="onSubmit">查询</el-button>
+        </el-form-item>
+    </el-form>
+    <el-row>
+        <el-button type="primary" plain @click="deleteByIds">批量删除</el-button>
+        <el-button type="danger" plain @click="dialogVisible = true">新增</el-button>
+    </el-row>
+    <!--添加数据的对话框表单-->
+    <el-dialog
+            title="编辑品牌"
+            :visible.sync="dialogVisible"
+            width="30%">
+        <span>
+            <el-form ref="form" :model="brand" label-width="80px">
+  <el-form-item label="品牌名称">
+    <el-input v-model="brand.brandName"></el-input>
+  </el-form-item>
+  <el-form-item label="企业名称">
+    <el-input v-model="brand.companyName"></el-input>
+  </el-form-item>
+   <el-form-item label="排序">
+    <el-input v-model="brand.ordered"></el-input>
+  </el-form-item>
+   <el-form-item label="备注">
+    <el-input type="textarea" v-model="brand.description"></el-input>
+  </el-form-item>
+  <el-form-item label="状态">
+    <el-switch v-model="brand.status"
+               active-value="1"
+               inactive-value="0">
+    </el-switch>
+  </el-form-item>
+  <el-form-item>
+    <el-button type="primary" @click="addBrand">提交</el-button>
+    <el-button @click="dialogVisible = false">取消</el-button>
+  </el-form-item>
+</el-form>
+  </span>
+    </el-dialog>
+    <!--表格-->
+    <template>
+        <el-table
+                :data="tableData"
+                style="width: 100%"
+                :row-class-name="tableRowClassName"
+                @selection-change="handleSelectionChange">
+            <el-table-column
+                    type="selection"
+                    width="55">
+            </el-table-column>
+            <el-table-column
+                    type="index"
+                    width="50">
+            </el-table-column>
+            <el-table-column
+                    prop="brandName"
+                    label="品牌名称"
+                    align="center"
+            >
+            </el-table-column>
+            <el-table-column
+                    prop="companyName"
+                    label="企业名称"
+                    align="center">
+            </el-table-column>
+            <el-table-column
+                    prop="ordered"
+                    label="排序"
+                    align="center">
+            </el-table-column>
+            <el-table-column
+                    prop="status"
+                    label="当前状态"
+                    align="center">
+            </el-table-column>
+            <el-table-column
+                    label="操作"
+                    align="center">
+
+            </el-table-column>
+            </el-table>
+        <!--  按钮放里面不显示 代码先完成再说 只是一个演示 -->
+        <el-row>
+            <el-button type="primary">修改</el-button>
+            <el-button type="danger" >删除</el-button>
+        </el-row>
+    </template>
+
+    <!--分页-->
+    <el-pagination
+            @size-change="handleSizeChange"
+            @current-change="handleCurrentChange"
+            :current-page="currentPage"
+            :page-sizes="[5, 10, 15, 20]"
+            :page-size="5"
+            layout="total, sizes, prev, pager, next, jumper"
+            :total="totalCount">
+    </el-pagination>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.0.5/vue.global.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vue@2.5.17/dist/vue.js"></script>
+<!--引入 element-ui 的样式，-->
+<link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+<!-- 必须先引入vue，  后使用element-ui -->
+<!-- 引入element 的组件库-->
+<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script>
+    new Vue({
+        el: "#app",
+        mounted(){
+            //当页面加载完成后发送异步请求获取数据
+            this.selectAll();
+        },
+        methods: {
+            tableRowClassName({row, rowIndex}) {
+                if (rowIndex === 1) {
+                    return 'warning-row';
+                } else if (rowIndex === 3) {
+                    return 'success-row';
+                }
+                return '';
+            },
+            handleSelectionChange(val) {
+                this.multipleSelection = val;
+            },
+            deleteByIds(){
+                for (let i = 0; i < this.multipleSelection.length; i++) {
+                    let selectionElement = this.multipleSelection[i];
+                    this.selectIds[i] = selectionElement.id;
+                }
+                var _this = this;
+                 axios({
+                    method:"post",
+                    url:"http://localhost:8080/brand/deleteByIds",
+                     data:_this.selectIds
+                 }).then(resp=>{
+                     if(resp.data == "success"){
+                         //添加成功 关闭窗口
+                         _this.dialogVisible = false;
+                         _this.selectAll();
+                         _this.$message({
+                             message: '恭喜你，删除成功',
+                             type: 'success'
+                         });
+                     }
+                 })
+            },
+            selectAll(){
+                var _this = this;
+                axios({
+                    method:"post",
+                    url:"http://localhost:8080/brand/selectByPageAndCondition?currentPage=" + this.currentPage + "&pageSize=" + this.pageSize,
+                    data:this.brand
+                }).then(resp=>{
+                    _this.tableData = resp.data.rows;
+                    //设置总记录数
+                    _this.totalCount =resp.data.totalCount;
+                })
+            },
+            //查询方法
+            onSubmit() {
+                this.selectAll();
+            },
+            //添加数据
+            addBrand() {
+                //发送AJAX异步请求添加数据
+                var _this = this;
+                axios({
+                    method:"post",
+                    url:"http://localhost:8080/brand/add",
+                    data: _this.brand
+                }).then(function (resp) {
+                    if(resp.data == "success"){
+                        //添加成功 关闭窗口
+                       _this.dialogVisible = false;
+                       _this.selectAll();
+                            _this.$message({
+                                message: '恭喜你，添加成功',
+                                type: 'success'
+                            });
+                    }
+                })
+            },
+            handleSizeChange(val) {
+                //重新每页显示条数
+                this.pageSize = val;
+                this.selectAll();
+            },
+            handleCurrentChange(val) {
+                //重新设置当前页码
+                this.currentPage = val;
+                this.selectAll();
+            }
+        },
+        data() {
+            return {
+                //选中的id数组
+                totalCount:100,
+                selectIds:[],
+                //每页显示条数
+                pageSize:5,
+                currentPage: 1,
+                dialogVisible: false,
+                brand:{
+                    status: '',
+                    brandName: '',
+                    companyName: '',
+                    id:'',
+                    description:'',
+                    ordered:''
+                },
+                multipleSelection:[],
+                tableData:[]
+            }
+        }
+    })
+</script>
+</body>
+</html>

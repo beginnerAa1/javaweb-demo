@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--名称标签-->
+<mapper namespace="itheima.mapper.BrandMapper">
+    <resultMap id="brandResultMap" type="brand">
+        <result column="brand_name" property="brandName"></result>
+        <result column="company_name" property="companyName"></result>
+    </resultMap>
+    <delete id="deleteByIds">
+        delete from tb_brand where id in
+        <foreach collection="ids" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+    </delete>
+    <select id="selectByPage" resultMap="brandResultMap">
+        select * from tb_brand limit #{begin},#{size}
+    </select>
+    <select id="selectByPageAndCondition" resultMap="brandResultMap">
+        select *
+        from tb_brand
+         <where>
+         <if test="brand.brandName != null and brand.brandName != ''">
+             and brand_name like #{brand.brandName}
+         </if>
+        <if test="brand.companyName != null and brand.companyName != ''">
+            and bcompany_name like #{brand.companyName}
+        </if>
+        <if test="brand.status != null">
+            and status like #{brand.status}
+        </if>
+         </where>
+        limit #{begin},#{size}
+    </select>
+    <select id="selectTotalCountByCondition" resultMap="brandResultMap">
+        select count(*) from tb_brand
+        <where>
+        <if test="brandName != null and brandName != ''">
+            and brand_name like #{brandName}
+        </if>
+        <if test="companyName != null and companyName != ''">
+            and bcompany_name like #{companyName}
+        </if>
+        <if test="status != null">
+            and status like #{status}
+        </if>
+    </where>
+        limit #{begin},#{size}
+    </select>
+</mapper>
